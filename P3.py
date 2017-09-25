@@ -5,9 +5,7 @@ Aplicativo mensurador de coleóptilos.
 Pedro de Figueiredo Rocha Barbosa Martins
 Walter Maldonado Jr
 
-TESTE
-
-Aplicativo para tomada de tamanho no teste de citotóxico de coléoptilos na área de alelopatia.
+Aplicativo para tomada de tamanho no teste citotóxico de coléoptilos na área de alelopatia.
 """
 
 import cv2
@@ -39,7 +37,7 @@ def order_points(pts):
 X0 é o número do pixels necessários na imagem por 10 centímetros. É necessário calibração antes do uso.
 Medir uma amostra com 10 centímetros, tirar a foto na imagem e verificar quantos pixels para calibrar.
 """
-X0 = 800
+X0 = 10
 X = X0/10
 
 ap = argparse.ArgumentParser()
@@ -48,23 +46,24 @@ ap.add_argument("-n", "--new", type=int, default=-1,
 args = vars(ap.parse_args())
 
 
-t = time.strftime("%d_%m_%Y") + "_" + time.strftime("%H_%M_%S")
+data = time.strftime("%d_%m_%Y")
+hora = time.strftime("%H_%M_%S")
 #Carregar uma imagem da câmera
 #Apertando a tecla espaço: tira foto, faz leitura e cria arquivo "data.txt"
-# cap = cv2.VideoCapture(0)
-# while(cap.isOpened()):
-#     ret, frame = cap.read()
-#     cv2.imshow('WindowName', frame)
-#     if cv2.waitKey(25) & 0xFF == ord(' '):
-#         cv2.imwrite(str(t) + '.jpg', frame)
-#         image = frame
-#         cap.release()
-#         cv2.destroyAllWindows()
-#     elif cv2.waitKey(25) & 0xFF == ord('q'):
-#         exit()
+cap = cv2.VideoCapture(0)
+while(cap.isOpened()):
+    ret, frame = cap.read()
+    cv2.imshow('WindowName', frame)
+    if cv2.waitKey(25) & 0xFF == ord(' '):
+        cv2.imwrite(str(data) +"_" + str(hora) + '.jpg', frame)
+        image = frame
+        cap.release()
+        cv2.destroyAllWindows()
+    elif cv2.waitKey(25) & 0xFF == ord('q'):
+        exit()
 
 #imagem carregada, transformação em cinza, threshold adaptativo.
-image = cv2.imread("1.bmp")
+# image = cv2.imread("1.bmp")
 # Quando for capturar com a câmera, retirar este image aqui de cima. Eu coloquei na captura para o frame ser o image já direto.
 
 cv2.imshow("original", image)
@@ -87,7 +86,7 @@ edged = cv2.Canny(gray, 75, 150)
 edged = cv2.dilate(edged, None, iterations=4)
 edged = cv2.erode(edged, None, iterations=5)
 
-cv2.imshow('edged', edged)
+# cv2.imshow('edged', edged)
 
 cnts = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 cnts = cnts[0] if imutils.is_cv2() else cnts[1]
@@ -95,8 +94,8 @@ cnts = cnts[0] if imutils.is_cv2() else cnts[1]
 # cv2.imshow('cnts', cnts)
 
 f = open('data.txt', 'a')
-f.write(time.strftime("%d/%m/%Y") + " " + time.strftime("%H:%M:%S") + "\n")
-f.write("data start" + "\n")
+f.write("Data: " + str (data) + "\n" + "Hora: " + str(hora) + "\n")
+f.write("Data start" + "\n")
 f.close()
 
 for (i, c) in enumerate(cnts):
@@ -106,7 +105,7 @@ for (i, c) in enumerate(cnts):
 
     # contorno retangular nos objetos
     box = cv2.minAreaRect(c)
-    box = cv2.boxPoints(box)
+    box = cv2.cv.BoxPoints(box)
     box = np.array(box, dtype="int")
     cv2.drawContours(image, [box], -1, (0, 255, 0), 1)
 
@@ -122,6 +121,10 @@ for (i, c) in enumerate(cnts):
     # Desenhando os contornos
     # for (x, y) in box:
     #     cv2.circle(image, (int(x), int(y)), 5, (0, 0, 255), -1)
+
+    cv2.putText(image, "Object #{}".format(i + 1),
+                (int(rect[0][0] - 15), int(rect[0][1] - 15)),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 2)
 
     # unpack the ordered bounding box, then compute the midpoint
     # between the top-left and top-right coordinates, followed by
@@ -151,6 +154,7 @@ for (i, c) in enumerate(cnts):
     #Salvando os dados em data.txt
 
     f = open('data.txt', 'a')
+    f.write("Object #{}".format(i + 1) + "\n")
     f.write(str(dimA) + "\n")
     f.write(str(dimB) + "\n")
     f.write("" + "\n")
@@ -162,8 +166,8 @@ f.write("----------#----------" + "\n" + "\n")
 f.close()
 
 # Imagem Final com contornos
-cv2.imwrite("Image-Cnt.bmp", image)
-cv2.imshow("Image", image)
+cv2.imwrite(str(data) + "_" + str(hora) + '-Cnt.jpg', frame)
+cv2.imshow("Contorno", image)
 cv2.waitKey(0)
 
 """
