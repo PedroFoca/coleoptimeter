@@ -95,7 +95,7 @@ cnts = cnts[0] if imutils.is_cv2() else cnts[1]
 
 f = open('data.txt', 'a')
 f.write("Data: " + str (data) + "\n" + "Hora: " + str(hora) + "\n")
-f.write("Data start" + "\n")
+f.write("Data start" + "\n" + "\n")
 f.close()
 
 for (i, c) in enumerate(cnts):
